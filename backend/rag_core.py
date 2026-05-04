@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from openai import NotFoundError
 from openai import OpenAI
 from pinecone import Pinecone
 
@@ -125,6 +126,24 @@ def _chat(client: OpenAI, model: str, messages: list[dict[str, str]]) -> str:
     return response.output_text.strip()
 
 
+def _chat_with_fallback(
+    client: OpenAI,
+    model: str,
+    fallback_model: str,
+    messages: list[dict[str, str]],
+) -> tuple[str, str, str | None]:
+    try:
+        return _chat(client, model, messages), model, None
+    except NotFoundError as exc:
+        if model == fallback_model:
+            raise
+        note = (
+            "The configured fine-tuned model was not accessible with this OpenAI key, "
+            f"so the answer used fallback model `{fallback_model}`."
+        )
+        return _chat(client, fallback_model, messages), fallback_model, note
+
+
 def _citations(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
     citations: list[dict[str, Any]] = []
     for rank, item in enumerate(results, start=1):
@@ -173,15 +192,16 @@ def answer_question(
         return {"answer": answer, "model": model, "citations": [], "mode": mode}
 
     if mode == "finetuned":
-        answer = _chat(
+        answer, model_used, model_note = _chat_with_fallback(
             client,
             model,
+            config.chat_model,
             [
                 {"role": "system", "content": f"{SYSTEM_PROMPT} {FT_PROMPT}"},
                 {"role": "user", "content": question},
             ],
         )
-        return {"answer": answer, "model": model, "citations": [], "mode": mode}
+        return {"answer": answer, "model": model_used, "model_note": model_note, "citations": [], "mode": mode}
 
     results = _retrieve(question, namespace, top_k, config)
     if not results:
@@ -202,12 +222,13 @@ def answer_question(
     if mode == "hybrid":
         system_prompt = f"{SYSTEM_PROMPT} {FT_PROMPT} {RAG_PROMPT}"
 
-    answer = _chat(
+    answer, model_used, model_note = _chat_with_fallback(
         client,
         model,
+        config.chat_model,
         [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt},
         ],
     )
-    return {"answer": answer, "model": model, "citations": _citations(results), "mode": mode}
+    return {"answer": answer, "model": model_used, "model_note": model_note, "citations": _citations(results), "mode": mode}

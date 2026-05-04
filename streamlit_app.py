@@ -136,6 +136,8 @@ if submit_button and question.strip():
             )
 
             st.markdown("### Answer")
+            if data.get("model_note"):
+                st.warning(data["model_note"])
             st.markdown(data.get("answer", "No response received"))
 
             st.markdown("### Model Information")
