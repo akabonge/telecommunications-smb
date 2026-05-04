@@ -53,13 +53,18 @@ The app will open at `http://localhost:8501`
 
 3. **Configure Secrets**
    - In Streamlit Cloud dashboard, go to App settings → Secrets
-   - Add your API configuration:
+   - Add your OpenAI and Pinecone configuration:
      ```
-     API_URL = "https://your-api-endpoint.com/chat"
      PINECONE_NAMESPACE = "custom_sources"
+     PINECONE_INDEX_HOST = "your-pinecone-index-host"
      OPENAI_API_KEY = "sk-..."
      PINECONE_API_KEY = "..."
+     OPENAI_FINETUNED_MODEL = "ft:gpt-4.1-mini-2025-04-14:resume-ai:psap-911-custom-sources:Dbm2AJlm"
      ```
+
+     `OPENAI_API_KEY` must be from the same OpenAI project/account that created
+     the fine-tuned model. Otherwise `hybrid` and `finetuned` mode will fail
+     with `model_not_found`.
 
 ## 📁 Project Structure
 
@@ -87,12 +92,15 @@ The app will open at `http://localhost:8501`
 Create a `.env` file:
 
 ```env
-# API Configuration
-API_URL=http://localhost:8000/chat
 PINECONE_NAMESPACE=custom_sources
+PINECONE_INDEX_HOST=your-pinecone-index-host
 
 # Model Configuration
 MODE=hybrid
+OPENAI_CHAT_MODEL=gpt-4.1-mini
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+OPENAI_EMBEDDING_DIMENSIONS=1536
+OPENAI_FINETUNED_MODEL=ft:gpt-4.1-mini-2025-04-14:resume-ai:psap-911-custom-sources:Dbm2AJlm
 MODEL=ft:gpt-4.1-mini-2025-04-14:resume-ai:psap-911-custom-sources:Dbm2AJlm
 TOP_K=8
 
@@ -115,29 +123,11 @@ In production (Streamlit Cloud), add secrets in the app settings:
 - **Custom Namespace**: Query specific document collections
 - **Shareable URL**: Public Streamlit Cloud deployment
 
-## 🔗 API Integration
+## RAG Integration
 
-The Streamlit app communicates with a backend API:
-
-```python
-POST /chat
-{
-  "question": "string",
-  "namespace": "string",
-  "mode": "base|finetuned|rag|hybrid",
-  "top_k": 8,
-  "model_override": "string (optional)"
-}
-```
-
-Response:
-```json
-{
-  "answer": "string",
-  "model": "string",
-  "citations": [...]
-}
-```
+The Streamlit app queries Pinecone and OpenAI directly. It uses the
+`custom_sources` namespace and the fine-tuned model by default, so Streamlit
+Cloud does not need a separate FastAPI backend.
 
 ## 📊 Technologies
 
@@ -178,7 +168,7 @@ st.title("Sources")
 
 - [ ] All dependencies in `requirements.txt`
 - [ ] Secrets configured in Streamlit Cloud
-- [ ] API endpoint accessible
+- [ ] Pinecone and OpenAI secrets configured
 - [ ] `.env` file in `.gitignore`
 - [ ] README updated with deployment instructions
 - [ ] Test app locally before pushing

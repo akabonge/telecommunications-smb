@@ -1,7 +1,3 @@
-[client]
-showErrorDetails = true
-toolbarMode = "minimal"
-
 [logger]
 level = "info"
 
@@ -11,9 +7,3 @@ backgroundColor = "#F5F5F5"
 secondaryBackgroundColor = "#E8EAED"
 textColor = "#31333F"
 font = "sans serif"
-
-[server]
-port = 8501
-headless = true
-enableCORS = false
-enableXsrfProtection = true

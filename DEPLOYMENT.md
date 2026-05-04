@@ -45,12 +45,23 @@ After deployment:
 2. Go to "Secrets"
 3. Add your configuration:
 
-```
-API_URL = "http://127.0.0.1:8000/chat"
+```toml
 PINECONE_NAMESPACE = "custom_sources"
-OPENAI_API_KEY = "sk-your-key-here"
+PINECONE_INDEX_HOST = "your-pinecone-index-host"
 PINECONE_API_KEY = "your-pinecone-key"
+
+OPENAI_API_KEY = "sk-your-key-here"
+OPENAI_CHAT_MODEL = "gpt-4.1-mini"
+OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
+OPENAI_EMBEDDING_DIMENSIONS = "1536"
+OPENAI_FINETUNED_MODEL = "ft:gpt-4.1-mini-2025-04-14:resume-ai:psap-911-custom-sources:Dbm2AJlm"
+MODEL = "ft:gpt-4.1-mini-2025-04-14:resume-ai:psap-911-custom-sources:Dbm2AJlm"
+MIN_SOURCE_SCORE = "0.0"
 ```
+
+Important: `OPENAI_API_KEY` must belong to the same OpenAI project/account that
+created the fine-tuned model. If it does not, hybrid/finetuned mode will fail
+with `model_not_found`.
 
 ## 5. Get Shareable URL
 
@@ -62,11 +73,11 @@ Share this link with anyone!
 ## Troubleshooting
 
 - **ImportError**: Make sure all dependencies are in `requirements.txt`
-- **API Connection Failed**: Verify API_URL is accessible and API is running
+- **Missing key / index errors**: Verify `OPENAI_API_KEY`, `PINECONE_API_KEY`, and `PINECONE_INDEX_HOST` are set in Streamlit secrets
 - **Secrets not working**: Use `st.secrets.get("KEY_NAME", "default_value")`
 
-## Next: Connect Your API
+## Architecture note
 
-Update the backend integration:
-- Modify `API_URL` to point to your production API endpoint
-- Ensure API has CORS configured to accept Streamlit Cloud
+The Streamlit Cloud app calls OpenAI and Pinecone directly. Do not set
+`API_URL` to `127.0.0.1`; that only works when a backend is running on the
+same machine.
