@@ -1,5 +1,6 @@
 [client]
 showErrorDetails = true
+toolbarMode = "minimal"
 
 [logger]
 level = "info"
@@ -16,6 +17,3 @@ port = 8501
 headless = true
 enableCORS = false
 enableXsrfProtection = true
-
-[client.toolbarMode]
-mode = "minimal"
